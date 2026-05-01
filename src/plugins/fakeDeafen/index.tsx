@@ -1,43 +1,49 @@
 import { definePluginSettings } from "@api/Settings";
 import definePlugin, { OptionType } from "@utils/types";
-import { findByPropsLazy } from "@webpack";
+import { findByPropsLazy, findStoreLazy } from "@webpack";
 import { Menu, React } from "@webpack/common";
 
-const MediaEngineStore = findByPropsLazy("isSelfDeaf");
 const MediaEngineActions = findByPropsLazy("toggleSelfMute");
+const SelectedChannelStore = findStoreLazy("SelectedChannelStore");
 
 const settings = definePluginSettings({
     fakeDeafen: {
         type: OptionType.BOOLEAN,
-        description: "Fake Deafen (Altri ti vedono sordo, ma tu senti)",
+        description: "Fake Deafen (Gli altri ti vedono sordo, ma tu senti tutto)",
         default: false,
     }
 });
 
+function isInVoiceChannel(): boolean {
+    return !!SelectedChannelStore.getVoiceChannelId();
+}
+
 function toggleFakeDeafen() {
     settings.store.fakeDeafen = !settings.store.fakeDeafen;
     
-    // Inneschiamo un aggiornamento dello stato audio per sincronizzare
+    // Aggiorniamo lo stato audio per notificare il cambiamento senza smuttare il microfono
     try {
         MediaEngineActions.toggleSelfMute();
-        setTimeout(() => MediaEngineActions.toggleSelfMute(), 50);
-    } catch { }
+        setTimeout(() => MediaEngineActions.toggleSelfMute(), 100);
+    } catch (e) {
+        console.error("[FakeDeafen] Errore nel toggle:", e);
+    }
 }
 
 export default definePlugin({
     name: "FakeDeafen",
-    description: "Simula lo stato di sordo per gli altri, mantenendo l'audio attivo per te.",
+    description: "Ti permette di sembrare sordo agli altri utenti mentre continui ad ascoltare.",
     authors: [{ id: 1449096170646536233n, name: "Block" }],
     settings,
 
     patches: [
         {
-            // Questa è la patch definitiva: intercettiamo la funzione che comunica lo stato al server di Discord
-            find: "setSelfDeafen:",
+            // Patch mirata alla funzione di sincronizzazione dello stato audio
+            find: "selfDeaf:",
             replacement: [
                 {
-                    match: /setSelfDeafen:function\((.+?)\){/g,
-                    replace: "setSelfDeafen:function($1){if($self.isFakeDeafen()){arguments[0]=true;} "
+                    match: /selfDeaf:(.+?),/g,
+                    replace: "selfDeaf:$self.isFakeDeafen() ? true : $1,"
                 }
             ]
         }
@@ -51,6 +57,7 @@ export default definePlugin({
                     id="vc-fake-deafen"
                     label="Fake Deafen"
                     checked={settings.store.fakeDeafen}
+                    disabled={!isInVoiceChannel()}
                     action={toggleFakeDeafen}
                 />
             );
