@@ -21,7 +21,7 @@ import "./fixDiscordBadgePadding.css";
 import { _getBadges, BadgePosition, BadgeUserArgs, ProfileBadge } from "@api/Badges";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { openContributorModal } from "@components/settings/tabs";
-import { Devs, GUILD_ID, CONTRIB_ROLE_ID, ADMINISTRATOR_ROLE_ID, STAFF_ROLE_ID, DEVELOPER_ROLE_ID } from "@utils/constants";
+import { Devs, GUILD_ID, CONTRIB_ROLE_ID, ADMINISTRATOR_ROLE_ID, STAFF_ROLE_ID, DEVELOPER_ROLE_ID, EVENT_ROLE_ID, PARTNER_ROLE_ID } from "@utils/constants";
 import { copyWithToast } from "@utils/discord";
 import { Logger } from "@utils/Logger";
 import { shouldShowContributorBadge, shouldShowEquicordContributorBadge } from "@utils/misc";
@@ -68,8 +68,8 @@ const EquicordContributorBadge: ProfileBadge = {
 // ──────────────────────────────────────────────
 const SpaceCordDonorBadge: ProfileBadge = {
     id: "spacecord_donor_badge",
-    description: "SpaceCord Donor",        // ← testo che appare al passaggio del mouse
-    iconSrc: "https://imgur.com/yGwu0GL.png", // ← link immagine badge (32x32 o 64x64 consigliato)
+    description: "Early Supporter",        // ← testo che appare al passaggio del mouse
+    iconSrc: "https://imgur.com/GzxJteL.png", // ← link immagine badge (32x32 o 64x64 consigliato)
     position: BadgePosition.START,
     shouldShow: ({ userId }) => {
         const member = GuildMemberStore.getMember(GUILD_ID, userId);
@@ -88,7 +88,7 @@ const SpaceCordDonorBadge: ProfileBadge = {
 // ──────────────────────────────────────────────
 const SpaceCordAdminBadge: ProfileBadge = {
     id: "spacecord_admin_badge",
-    description: "SpaceCord Administrator", // ← testo tooltip
+    description: "Administrator", // ← testo tooltip
     iconSrc: "https://imgur.com/7AJ8fGC.png", // ← cambia con l'icona che vuoi
     position: BadgePosition.START,
     shouldShow: ({ userId }) => {
@@ -108,7 +108,7 @@ const SpaceCordAdminBadge: ProfileBadge = {
 // ──────────────────────────────────────────────
 const SpaceCordStaffBadge: ProfileBadge = {
     id: "spacecord_staff_badge",
-    description: "SpaceCord Staff",         // ← testo tooltip
+    description: "Moderator",         // ← testo tooltip
     iconSrc: "https://imgur.com/s7kIPj3.png", // ← cambia con l'icona che vuoi
     position: BadgePosition.START,
     shouldShow: ({ userId }) => {
@@ -128,12 +128,51 @@ const SpaceCordStaffBadge: ProfileBadge = {
 // ──────────────────────────────────────────────
 const SpaceCordDevBadge: ProfileBadge = {
     id: "spacecord_dev_badge",
-    description: "SpaceCord Developer",    // ← testo tooltip
+    description: "Developer",    // ← testo tooltip
     iconSrc: "https://imgur.com/06xw1ac.png", // ← cambia con l'icona che vuoi
     position: BadgePosition.START,
     shouldShow: ({ userId }) => {
         const member = GuildMemberStore.getMember(GUILD_ID, userId);
         return !!member?.roles?.includes(DEVELOPER_ROLE_ID);
+    },
+    props: {
+        style: {
+            borderRadius: "50%",
+            transform: "scale(1.1)"
+        }
+    },
+};
+// ──────────────────────────────────────────────
+// Badge EVENT — chi ha EVENT_ROLE_ID nel server SpaceCord
+// ──────────────────────────────────────────────
+const SpaceCordEventBadge: ProfileBadge = {
+    id: "spacecord_event_badge",
+    description: "Event HypeCord",    // ← testo tooltip
+    iconSrc: "https://imgur.com/3etNO3Y.png", // ← cambia con l'icona che vuoi
+    position: BadgePosition.START,
+    shouldShow: ({ userId }) => {
+        const member = GuildMemberStore.getMember(GUILD_ID, userId);
+        return !!member?.roles?.includes(EVENT_ROLE_ID);
+    },
+    props: {
+        style: {
+            borderRadius: "50%",
+            transform: "scale(0.9)"
+        }
+    },
+};
+
+// ──────────────────────────────────────────────
+// Badge PARTNER — chi ha PARTNER_ROLE_ID nel server SpaceCord
+// ──────────────────────────────────────────────
+const SpaceCordPartnerBadge: ProfileBadge = {
+    id: "spacecord_partner_badge",
+    description: "Partnered Server Owner",    // ← testo tooltip
+    iconSrc: "https://imgur.com/WCA5fe4.png", // ← link immagine badge
+    position: BadgePosition.START,
+    shouldShow: ({ userId }) => {
+        const member = GuildMemberStore.getMember(GUILD_ID, userId);
+        return !!member?.roles?.includes(PARTNER_ROLE_ID);
     },
     props: {
         style: {
@@ -263,7 +302,7 @@ export default definePlugin({
         }
     },
 
-    userProfileBadges: [SpaceCordDonorBadge, SpaceCordDevBadge, SpaceCordAdminBadge, SpaceCordStaffBadge],
+    userProfileBadges: [SpaceCordDonorBadge, SpaceCordDevBadge, SpaceCordAdminBadge, SpaceCordStaffBadge, SpaceCordEventBadge, SpaceCordPartnerBadge],
 
     async start() {
         await loadAllBadges();
