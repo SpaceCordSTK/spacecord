@@ -47,13 +47,6 @@ jobs:
                   zip -r SpaceCord-desktop.zip desktop/
                   cd ..
 
-            - name: Delete existing 'latest' release if exists
-              run: |
-                  gh release delete latest --yes || true
-                  git push origin :refs/tags/latest || true
-              env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
             - name: Create GitHub Release with assets
               uses: softprops/action-gh-release@v2
               with:
@@ -77,5 +70,6 @@ jobs:
                       dist/SpaceCord-desktop.zip
                   draft: false
                   prerelease: false
+                  make_latest: true
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
