@@ -21,17 +21,22 @@ Write-Host "[1/5] Cerco l'installazione di Discord..." -ForegroundColor Yellow
 
 $discordPaths = @(
     "$env:LOCALAPPDATA\Discord",
-    "$env:APPDATA\Discord"
+    "$env:APPDATA\Discord",
+    "C:\Users\$env:USERNAME\AppData\Local\Discord"
 )
 
 $discordApp = $null
 foreach ($path in $discordPaths) {
     if (Test-Path $path) {
         $appFolders = Get-ChildItem $path -Directory | Where-Object { $_.Name -like "app-*" } | Sort-Object Name -Descending
-        if ($appFolders) {
-            $discordApp = Join-Path $appFolders[0].FullName "resources"
-            break
+        foreach ($folder in $appFolders) {
+            $resourcesPath = Join-Path $folder.FullName "resources"
+            if (Test-Path $resourcesPath) {
+                $discordApp = $resourcesPath
+                break
+            }
         }
+        if ($discordApp) { break }
     }
 }
 
