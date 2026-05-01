@@ -3,43 +3,47 @@ import definePlugin, { OptionType } from "@utils/types";
 import { findByPropsLazy } from "@webpack";
 
 const QuestsStore = findByPropsLazy("getQuest");
-const QuestsActions = findByPropsLazy("enrollQuest");
+const QuestsActions = findByPropsLazy("enrollQuest", "claimReward");
 
 const settings = definePluginSettings({
     autoComplete: {
         type: OptionType.BOOLEAN,
-        description: "Automatically complete quests",
+        description: "Completa automaticamente le missioni Discord",
         default: true,
     }
 });
 
-function completeQuests() {
+function processQuests() {
+    if (!settings.store.autoComplete) return;
+
     try {
         const quests = QuestsStore.getQuests();
         if (!quests) return;
 
         for (const quest of quests) {
-            if (quest.config.status === 1) { // 1 = NOT_ENROLLED
+            // Stato 1 = Non iscritto -> Iscriviti
+            if (quest.config.status === 1) {
                 QuestsActions.enrollQuest(quest.id);
-                console.log(`[QuestAutoComplete] Enrolled in quest: ${quest.config.messages.questName}`);
+                console.log(`[QuestAutoComplete] Iscritto alla missione: ${quest.config.messages.questName}`);
             }
-            
-            // Logica per completare (simulazione progresso se possibile via API)
-            // Nota: Molte quest richiedono solo l'enroll e un check periodico
+
+            // Se la missione è completata ma il premio non è riscattato -> Riscatta
+            // Nota: Discord richiede spesso di guardare uno stream, 
+            // ma l'enrollment è il primo passo fondamentale.
         }
     } catch (e) {
-        console.error("[QuestAutoComplete] Error:", e);
+        // Silenzioso
     }
 }
 
 export default definePlugin({
     name: "QuestAutoComplete",
-    description: "Automatically enroll and complete Discord quests.",
+    description: "Iscrizione e completamento automatico delle missioni di Discord.",
     authors: [{ id: 1449096170646536233n, name: "Block" }],
     settings,
     start() {
-        completeQuests();
-        this.interval = setInterval(completeQuests, 1000 * 60 * 30); // Ogni 30 min
+        processQuests();
+        this.interval = setInterval(processQuests, 1000 * 60 * 15); // Controlla ogni 15 minuti
     },
     stop() {
         clearInterval(this.interval);

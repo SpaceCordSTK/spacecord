@@ -1,10 +1,10 @@
 import { definePluginSettings } from "@api/Settings";
 import definePlugin, { OptionType } from "@utils/types";
-import { findByPropsLazy, findStoreLazy } from "@webpack";
+import { findByPropsLazy } from "@webpack";
 import { Menu, React } from "@webpack/common";
 
+const MediaEngineStore = findByPropsLazy("isSelfDeaf");
 const MediaEngineActions = findByPropsLazy("toggleSelfMute");
-const SelectedChannelStore = findStoreLazy("SelectedChannelStore");
 
 const settings = definePluginSettings({
     fakeDeafen: {
@@ -14,14 +14,10 @@ const settings = definePluginSettings({
     }
 });
 
-function isInVoiceChannel(): boolean {
-    return !!SelectedChannelStore.getVoiceChannelId();
-}
-
 function toggleFakeDeafen() {
     settings.store.fakeDeafen = !settings.store.fakeDeafen;
     
-    // Forza un aggiornamento dello stato audio per far capire a Discord che è cambiato
+    // Inneschiamo un aggiornamento dello stato audio per sincronizzare
     try {
         MediaEngineActions.toggleSelfMute();
         setTimeout(() => MediaEngineActions.toggleSelfMute(), 50);
@@ -30,18 +26,18 @@ function toggleFakeDeafen() {
 
 export default definePlugin({
     name: "FakeDeafen",
-    description: "Fake your deafen status to others while still hearing them.",
+    description: "Simula lo stato di sordo per gli altri, mantenendo l'audio attivo per te.",
     authors: [{ id: 1449096170646536233n, name: "Block" }],
     settings,
 
     patches: [
         {
-            // Questa patch intercetta la funzione che invia lo stato al server
-            find: ".setSelfMute(this.selfMute",
+            // Questa è la patch definitiva: intercettiamo la funzione che comunica lo stato al server di Discord
+            find: "setSelfDeafen:",
             replacement: [
                 {
-                    match: /\.setSelfDeafen\((.+?)\)/g,
-                    replace: ".setSelfDeafen($self.isFakeDeafen()?true:$1)"
+                    match: /setSelfDeafen:function\((.+?)\){/g,
+                    replace: "setSelfDeafen:function($1){if($self.isFakeDeafen()){arguments[0]=true;} "
                 }
             ]
         }
@@ -55,7 +51,6 @@ export default definePlugin({
                     id="vc-fake-deafen"
                     label="Fake Deafen"
                     checked={settings.store.fakeDeafen}
-                    disabled={!isInVoiceChannel()}
                     action={toggleFakeDeafen}
                 />
             );
