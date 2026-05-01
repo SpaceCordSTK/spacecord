@@ -21,7 +21,7 @@ import "./fixDiscordBadgePadding.css";
 import { _getBadges, BadgePosition, BadgeUserArgs, ProfileBadge } from "@api/Badges";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { openContributorModal } from "@components/settings/tabs";
-import { Devs, GUILD_ID, CONTRIB_ROLE_ID, ADMINISTRATOR_ROLE_ID, STAFF_ROLE_ID, DEVELOPER_ROLE_ID, EVENT_ROLE_ID, PARTNER_ROLE_ID } from "@utils/constants";
+import { Devs, GUILD_ID, CONTRIB_ROLE_ID, ADMINISTRATOR_ROLE_ID, STAFF_ROLE_ID, DEVELOPER_ROLE_ID, EVENT_ROLE_ID, PARTNER_ROLE_ID, BUG_HUNTER_T1_ID, BUG_HUNTER_T2_ID } from "@utils/constants";
 import { copyWithToast } from "@utils/discord";
 import { Logger } from "@utils/Logger";
 import { shouldShowContributorBadge, shouldShowEquicordContributorBadge } from "@utils/misc";
@@ -55,7 +55,7 @@ const EquicordContributorBadge: ProfileBadge = {
     props: {
         style: {
             borderRadius: "50%",
-            transform: "scale(1.2)"
+            transform: "scale(1.1)"
         }
     },
 };
@@ -98,7 +98,7 @@ const SpaceCordAdminBadge: ProfileBadge = {
     props: {
         style: {
             borderRadius: "50%",
-            transform: "scale(1.2)"
+            transform: "scale(1.1)"
         }
     },
 };
@@ -138,7 +138,7 @@ const SpaceCordDevBadge: ProfileBadge = {
     props: {
         style: {
             borderRadius: "50%",
-            transform: "scale(1.1)"
+            transform: "scale(1.0)"
         }
     },
 };
@@ -148,7 +148,7 @@ const SpaceCordDevBadge: ProfileBadge = {
 const SpaceCordEventBadge: ProfileBadge = {
     id: "spacecord_event_badge",
     description: "Event HypeCord",    // ← testo tooltip
-    iconSrc: "https://imgur.com/3etNO3Y.png", // ← cambia con l'icona che vuoi
+    iconSrc: "https://imgur.com/H9rod8p.png", // ← cambia con l'icona che vuoi
     position: BadgePosition.START,
     shouldShow: ({ userId }) => {
         const member = GuildMemberStore.getMember(GUILD_ID, userId);
@@ -157,7 +157,7 @@ const SpaceCordEventBadge: ProfileBadge = {
     props: {
         style: {
             borderRadius: "50%",
-            transform: "scale(0.9)"
+            transform: "scale(1.0)"
         }
     },
 };
@@ -173,6 +173,46 @@ const SpaceCordPartnerBadge: ProfileBadge = {
     shouldShow: ({ userId }) => {
         const member = GuildMemberStore.getMember(GUILD_ID, userId);
         return !!member?.roles?.includes(PARTNER_ROLE_ID);
+    },
+    props: {
+        style: {
+            borderRadius: "50%",
+            transform: "scale(1.1)"
+        }
+    },
+};
+
+// ──────────────────────────────────────────────
+// Badge BUG HUNTER T1 — chi ha BUG_HUNTER_T1_ID nel server SpaceCord
+// ──────────────────────────────────────────────
+const SpaceCordBugHunterT1Badge: ProfileBadge = {
+    id: "spacecord_bughunter_t1_badge",
+    description: "Discord Bug Hunter (Tier 1)",
+    iconSrc: "https://imgur.com/H0jnFEr.png",
+    position: BadgePosition.START,
+    shouldShow: ({ userId }) => {
+        const member = GuildMemberStore.getMember(GUILD_ID, userId);
+        return !!member?.roles?.includes(BUG_HUNTER_T1_ID);
+    },
+    props: {
+        style: {
+            borderRadius: "50%",
+            transform: "scale(1.1)"
+        }
+    },
+};
+
+// ──────────────────────────────────────────────
+// Badge BUG HUNTER T2 — chi ha BUG_HUNTER_T2_ID nel server SpaceCord
+// ──────────────────────────────────────────────
+const SpaceCordBugHunterT2Badge: ProfileBadge = {
+    id: "spacecord_bughunter_t2_badge",
+    description: "Discord Bug Hunter (Tier 2)",
+    iconSrc: "https://imgur.com/VfSWls8.png",
+    position: BadgePosition.START,
+    shouldShow: ({ userId }) => {
+        const member = GuildMemberStore.getMember(GUILD_ID, userId);
+        return !!member?.roles?.includes(BUG_HUNTER_T2_ID);
     },
     props: {
         style: {
@@ -302,7 +342,7 @@ export default definePlugin({
         }
     },
 
-    userProfileBadges: [SpaceCordDonorBadge, SpaceCordDevBadge, SpaceCordAdminBadge, SpaceCordStaffBadge, SpaceCordEventBadge, SpaceCordPartnerBadge],
+    userProfileBadges: [SpaceCordDonorBadge, SpaceCordDevBadge, SpaceCordAdminBadge, SpaceCordStaffBadge, SpaceCordEventBadge, SpaceCordPartnerBadge, SpaceCordBugHunterT1Badge, SpaceCordBugHunterT2Badge],
 
     async start() {
         await loadAllBadges();
