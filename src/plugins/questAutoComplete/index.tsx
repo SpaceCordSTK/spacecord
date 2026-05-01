@@ -3,55 +3,55 @@ import definePlugin, { OptionType } from "@utils/types";
 import { findByPropsLazy } from "@webpack";
 
 const QuestsStore = findByPropsLazy("getQuests");
-const QuestsActions = findByPropsLazy("enrollQuest", "claimReward");
+const QuestsActions = findByPropsLazy("enrollQuest");
+const Dispatcher = findByPropsLazy("dispatch", "subscribe");
 
 const settings = definePluginSettings({
     autoComplete: {
         type: OptionType.BOOLEAN,
-        description: "Iscriviti e completa automaticamente le missioni",
+        description: "Completa automaticamente le missioni",
         default: true,
     }
 });
 
-async function processQuests() {
+function processQuests() {
     if (!settings.store.autoComplete) return;
 
     try {
-        // Se Discord non ha ancora caricato le quest, usciamo e riproviamo dopo
-        if (!QuestsStore || !QuestsStore.getQuests) return;
-
         const quests = QuestsStore.getQuests();
         if (!quests) return;
 
-        // Iteriamo su tutte le quest attive (che sono una mappa, non un array)
-        const questEntries = Object.values(quests);
-        
-        for (const quest: any of questEntries) {
-            // Stato 1 significa "Non ancora iscritto"
-            if (quest.config?.status === 1 || quest.enrolled === false) {
+        // Discord ora usa spesso un formato diverso per le quest, le iteriamo correttamente
+        const questList = typeof quests.values === "function" ? Array.from(quests.values()) : Object.values(quests);
+
+        for (const quest: any of questList) {
+            // Se non siamo iscritti (status 1)
+            if (quest.config?.status === 1 || !quest.enrolled) {
                 QuestsActions.enrollQuest(quest.id);
-                console.log(`[SpaceCord Quests] Iscritto con successo a: ${quest.config?.messages?.questName || quest.id}`);
+                console.log(`[QuestAutoComplete] Iscritto alla missione: ${quest.id}`);
             }
 
-            // Se la missione è completata ma non riscattata, prova a riscattarla
-            if (quest.completedAt && !quest.claimedAt) {
-                QuestsActions.claimReward(quest.id);
-            }
+            // Inviamo un segnale di "heartbeat" per la quest per simulare che stiamo giocando/guardando
+            Dispatcher.dispatch({
+                type: "QUEST_VIDEO_PROGRESS_UPDATE",
+                questId: quest.id,
+                progress: 100 // Proviamo a forzare il progresso
+            });
         }
     } catch (e) {
-        // Silenzioso per non intasare la console
+        // Silenzioso
     }
 }
 
 export default definePlugin({
     name: "QuestAutoComplete",
-    description: "Gestisce automaticamente le missioni Discord (iscrizione e riscatto premi).",
+    description: "Iscrizione e completamento automatico delle missioni Discord.",
     authors: [{ id: 1449096170646536233n, name: "Block" }],
     settings,
     start() {
-        // Aspettiamo un po' all'avvio per dare tempo a Discord di caricare i moduli
-        setTimeout(() => processQuests(), 10000);
-        this.interval = setInterval(processQuests, 1000 * 60 * 30); // Ogni 30 min
+        // Aspettiamo che il dispatcher sia pronto
+        setTimeout(() => processQuests(), 5000);
+        this.interval = setInterval(processQuests, 1000 * 60 * 20); // Ogni 20 minuti
     },
     stop() {
         clearInterval(this.interval);

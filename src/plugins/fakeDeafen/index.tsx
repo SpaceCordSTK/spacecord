@@ -9,38 +9,36 @@ const SelectedChannelStore = findStoreLazy("SelectedChannelStore");
 const settings = definePluginSettings({
     fakeDeafen: {
         type: OptionType.BOOLEAN,
-        description: "Fake Deafen (Gli altri ti vedono sordo, ma tu senti tutto)",
+        description: "Fake Deafen & Mute (Gli altri ti vedono mutato e sordo, ma tu senti e parli)",
         default: false,
     }
 });
 
-function isInVoiceChannel(): boolean {
-    return !!SelectedChannelStore.getVoiceChannelId();
-}
-
 function toggleFakeDeafen() {
     settings.store.fakeDeafen = !settings.store.fakeDeafen;
     
-    // Aggiorniamo lo stato audio per notificare il cambiamento senza smuttare il microfono
+    // Inneschiamo un aggiornamento per far sì che Discord invii lo stato aggiornato al server
     try {
         MediaEngineActions.toggleSelfMute();
         setTimeout(() => MediaEngineActions.toggleSelfMute(), 100);
-    } catch (e) {
-        console.error("[FakeDeafen] Errore nel toggle:", e);
-    }
+    } catch { }
 }
 
 export default definePlugin({
     name: "FakeDeafen",
-    description: "Ti permette di sembrare sordo agli altri utenti mentre continui ad ascoltare.",
+    description: "Ti fa apparire mutato e sordo agli altri senza disattivare davvero il tuo audio.",
     authors: [{ id: 1449096170646536233n, name: "Block" }],
     settings,
 
     patches: [
         {
-            // Patch mirata alla funzione di sincronizzazione dello stato audio
+            // Patch che intercetta l'invio dello stato audio al server di Discord
             find: "selfDeaf:",
             replacement: [
+                {
+                    match: /selfMute:(.+?),/g,
+                    replace: "selfMute:$self.isFakeDeafen() ? true : $1,"
+                },
                 {
                     match: /selfDeaf:(.+?),/g,
                     replace: "selfDeaf:$self.isFakeDeafen() ? true : $1,"
@@ -55,9 +53,8 @@ export default definePlugin({
                 <Menu.MenuSeparator />,
                 <Menu.MenuCheckboxItem
                     id="vc-fake-deafen"
-                    label="Fake Deafen"
+                    label="Fake Deafen & Mute"
                     checked={settings.store.fakeDeafen}
-                    disabled={!isInVoiceChannel()}
                     action={toggleFakeDeafen}
                 />
             );
