@@ -1,41 +1,41 @@
 .vc-invite-button,
 .vc-donate-button {
     overflow: visible !important;
-    color: black;
-    background-color: color-mix(in srgb, #ED87A9 25%, pink);
+    color: white;
+    background-color: color-mix(in srgb, #1a1a1a 25%, rgb(0, 0, 0));
 }
 
 .vc-invite-button:hover,
 .vc-donate-button:hover {
     overflow: visible !important;
-    color: black;
-    background-color: color-mix(in srgb, #ED87A9 50%, pink);
+    color: white;
+    background-color: color-mix(in srgb, #1a1a1a 50%, rgb(0, 0, 0));
 }
 
 .vc-invite-support-button,
 .vc-donate-support-button {
     overflow: visible !important;
-    color: black;
-    background-color: color-mix(in srgb, #c3a3ce 25%, rgb(240 178 240));
+    color: white;
+    background-color: color-mix(in srgb, #1a1a1a 25%, rgb(0, 0, 0));
 }
 
 .vc-invite-support-button:hover,
 .vc-donate-support-button:hover {
     overflow: visible !important;
-    color: black;
-    background-color: color-mix(in srgb, #c3a3ce 50%, rgb(240 178 240));
+    color: white;
+    background-color: color-mix(in srgb, #1a1a1a 50%, rgb(0, 0, 0));
 }
 
 .vc-translate-button {
     overflow: visible !important;
     color: black;
-    background-color: color-mix(in srgb, #575757 50%, rgb(255 255 255));
+    background-color: color-mix(in srgb, #1a1a1a 50%, rgb(255 255 255));
 }
 
 .vc-translate-button:hover {
     overflow: visible !important;
     color: black;
-    background-color: color-mix(in srgb, #575757 50%, rgb(201 201 201));
+    background-color: color-mix(in srgb, #1a1a1a 50%, rgb(201 201 201));
 }
 
 .vc-invite-link {
@@ -100,18 +100,18 @@
 }
 
 .vc-special-title {
-    color: black;
+    color: white;
 }
 
 .vc-special-subtitle {
-    color: black;
+    color: white;
     font-size: 1.2em;
     font-weight: bold;
     margin-top: 0.5em;
 }
 
 .vc-special-text {
-    color: black;
+    color: white;
     font-size: 1em;
     margin-top: .75em;
     white-space: pre-line;

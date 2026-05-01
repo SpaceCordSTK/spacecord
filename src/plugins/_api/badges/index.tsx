@@ -21,12 +21,12 @@ import "./fixDiscordBadgePadding.css";
 import { _getBadges, BadgePosition, BadgeUserArgs, ProfileBadge } from "@api/Badges";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { openContributorModal } from "@components/settings/tabs";
-import { Devs } from "@utils/constants";
+import { Devs, GUILD_ID, CONTRIB_ROLE_ID, ADMINISTRATOR_ROLE_ID, STAFF_ROLE_ID, DEVELOPER_ROLE_ID } from "@utils/constants";
 import { copyWithToast } from "@utils/discord";
 import { Logger } from "@utils/Logger";
 import { shouldShowContributorBadge, shouldShowEquicordContributorBadge } from "@utils/misc";
 import definePlugin from "@utils/types";
-import { ContextMenuApi, Menu, Toasts, UserStore } from "@webpack/common";
+import { ContextMenuApi, GuildMemberStore, Menu, Toasts, UserStore } from "@webpack/common";
 
 import Plugins, { PluginMeta } from "~plugins";
 
@@ -55,7 +55,90 @@ const EquicordContributorBadge: ProfileBadge = {
     props: {
         style: {
             borderRadius: "50%",
-            transform: "scale(0.9)"
+            transform: "scale(1.2)"
+        }
+    },
+};
+
+
+// ──────────────────────────────────────────────
+// Badge DONATORE — chi ha CONTRIB_ROLE_ID nel server SpaceCord
+// Per cambiare icona: sostituisci iconSrc con il link della tua immagine
+// Per cambiare testo tooltip: cambia "description"
+// ──────────────────────────────────────────────
+const SpaceCordDonorBadge: ProfileBadge = {
+    id: "spacecord_donor_badge",
+    description: "SpaceCord Donor",        // ← testo che appare al passaggio del mouse
+    iconSrc: "https://imgur.com/yGwu0GL.png", // ← link immagine badge (32x32 o 64x64 consigliato)
+    position: BadgePosition.START,
+    shouldShow: ({ userId }) => {
+        const member = GuildMemberStore.getMember(GUILD_ID, userId);
+        return !!member?.roles?.includes(CONTRIB_ROLE_ID);
+    },
+    props: {
+        style: {
+            borderRadius: "50%",
+            transform: "scale(1.1)"
+        }
+    },
+};
+
+// ──────────────────────────────────────────────
+// Badge ADMINISTRATOR — chi ha ADMINISTRATOR_ROLE_ID nel server SpaceCord
+// ──────────────────────────────────────────────
+const SpaceCordAdminBadge: ProfileBadge = {
+    id: "spacecord_admin_badge",
+    description: "SpaceCord Administrator", // ← testo tooltip
+    iconSrc: "https://imgur.com/7AJ8fGC.png", // ← cambia con l'icona che vuoi
+    position: BadgePosition.START,
+    shouldShow: ({ userId }) => {
+        const member = GuildMemberStore.getMember(GUILD_ID, userId);
+        return !!member?.roles?.includes(ADMINISTRATOR_ROLE_ID);
+    },
+    props: {
+        style: {
+            borderRadius: "50%",
+            transform: "scale(1.2)"
+        }
+    },
+};
+
+// ──────────────────────────────────────────────
+// Badge STAFF — chi ha STAFF_ROLE_ID nel server SpaceCord
+// ──────────────────────────────────────────────
+const SpaceCordStaffBadge: ProfileBadge = {
+    id: "spacecord_staff_badge",
+    description: "SpaceCord Staff",         // ← testo tooltip
+    iconSrc: "https://imgur.com/s7kIPj3.png", // ← cambia con l'icona che vuoi
+    position: BadgePosition.START,
+    shouldShow: ({ userId }) => {
+        const member = GuildMemberStore.getMember(GUILD_ID, userId);
+        return !!member?.roles?.includes(STAFF_ROLE_ID);
+    },
+    props: {
+        style: {
+            borderRadius: "50%",
+            transform: "scale(1.2)"
+        }
+    },
+};
+
+// ──────────────────────────────────────────────
+// Badge DEVELOPER — chi ha DEVELOPER_ROLE_ID nel server SpaceCord
+// ──────────────────────────────────────────────
+const SpaceCordDevBadge: ProfileBadge = {
+    id: "spacecord_dev_badge",
+    description: "SpaceCord Developer",    // ← testo tooltip
+    iconSrc: "https://imgur.com/06xw1ac.png", // ← cambia con l'icona che vuoi
+    position: BadgePosition.START,
+    shouldShow: ({ userId }) => {
+        const member = GuildMemberStore.getMember(GUILD_ID, userId);
+        return !!member?.roles?.includes(DEVELOPER_ROLE_ID);
+    },
+    props: {
+        style: {
+            borderRadius: "50%",
+            transform: "scale(1.1)"
         }
     },
 };
@@ -180,7 +263,7 @@ export default definePlugin({
         }
     },
 
-    userProfileBadges: [ContributorBadge, EquicordContributorBadge, UserPluginContributorBadge],
+    userProfileBadges: [SpaceCordDonorBadge, SpaceCordDevBadge, SpaceCordAdminBadge, SpaceCordStaffBadge],
 
     async start() {
         await loadAllBadges();

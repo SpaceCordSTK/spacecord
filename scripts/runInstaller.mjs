@@ -48,7 +48,7 @@ function getFilename() {
 
 async function ensureBinary() {
     const filename = getFilename();
-    console.log("Downloading " + filename);
+    console.log("Downloading " + filename.replace("EquilotlCli", "SpaceCord"));
 
     mkdirSync(FILE_DIR, { recursive: true });
 

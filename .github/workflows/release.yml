@@ -1,0 +1,81 @@
+name: Build & Release SpaceCord
+
+on:
+    push:
+        branches:
+            - main
+    workflow_dispatch: # permette di lanciarlo manualmente da GitHub
+
+env:
+    FORCE_COLOR: true
+
+permissions:
+    contents: write
+
+jobs:
+    build-and-release:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Get version from package.json
+              id: pkg
+              run: echo "version=v$(jq -r .version < package.json)" >> $GITHUB_OUTPUT
+
+            - name: Setup PNPM
+              uses: pnpm/action-setup@v3
+
+            - name: Setup Node.js 20
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: "pnpm"
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Build SpaceCord
+              run: pnpm build
+
+            - name: Package dist/desktop into zip
+              run: |
+                  cd dist
+                  zip -r SpaceCord-desktop.zip desktop/
+                  cd ..
+
+            - name: Delete existing 'latest' release if exists
+              run: |
+                  gh release delete latest --yes || true
+                  git push origin :refs/tags/latest || true
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Create GitHub Release with assets
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: latest
+                  name: "SpaceCord ${{ steps.pkg.outputs.version }}"
+                  body: |
+                      ## SpaceCord ${{ steps.pkg.outputs.version }}
+
+                      ### Come installare SpaceCord
+
+                      **Windows** — Apri PowerShell come Amministratore e incolla:
+                      ```powershell
+                      irm https://raw.githubusercontent.com/${{ github.repository }}/main/scripts/install.ps1 | iex
+                      ```
+
+                      **Aggiornare** — Esegui lo stesso comando di sopra, sovrascrive la versione precedente.
+
+                      ---
+                      Build automatica da commit `${{ github.sha }}`
+                  files: |
+                      dist/SpaceCord-desktop.zip
+                  draft: false
+                  prerelease: false
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
