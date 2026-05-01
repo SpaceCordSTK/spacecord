@@ -331,13 +331,20 @@ function isInVoiceChannel(): boolean {
 }
 
 function toggleFakeDeafen() {
-    settings.store.fakeDeafen = !settings.store.fakeDeafen;
+    const isFake = !settings.store.fakeDeafen;
+    settings.store.fakeDeafen = isFake;
+
     try {
+        // Se stiamo attivando il fake deafen e siamo mutati, non vogliamo smutarci
+        // La patch si occupa di dire a Discord "non sono davvero sordo" 
+        // mentre l'interfaccia mostra di sì.
         MediaEngineActions.toggleSelfDeaf();
         setTimeout(() => {
             try { MediaEngineActions.toggleSelfDeaf(); } catch { }
-        }, 50);
-    } catch { }
+        }, 100);
+    } catch (e) {
+        console.error("[FakeDeafen] Failed to toggle:", e);
+    }
 }
 
 function parseKeybind(keybind: string) {
