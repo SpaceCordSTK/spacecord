@@ -1,100 +1,125 @@
 import { relaunch } from "@utils/native";
 import definePlugin from "@utils/types";
-import { React } from "@webpack/common";
-import { Notice } from "@components/Notice";
-import { Button, Toasts, showToast } from "@webpack/common";
 
 const PACKAGE_JSON_URL = "https://raw.githubusercontent.com/SpaceCordSTK/spacecord/main/package.json";
-// URL dello script di installazione per l'auto-update
-const INSTALL_SCRIPT_URL = "https://raw.githubusercontent.com/SpaceCordSTK/spacecord/main/scripts/install.ps1";
 
 async function checkUpdate() {
     try {
         const response = await fetch(PACKAGE_JSON_URL, { cache: "no-cache" });
         const data = await response.json();
         const onlineVersion = data.version;
-        
         // @ts-ignore
-        if (onlineVersion !== VERSION) {
-            return onlineVersion;
-        }
-    } catch (e) {
-        console.error("[SpaceCord Updater] Errore nel controllo aggiornamenti:", e);
-    }
+        const localVersion = VERSION;
+        if (onlineVersion !== localVersion) return onlineVersion;
+    } catch (e) {}
     return null;
-}
-
-async function runAutoUpdate() {
-    showToast("Downloading update...", Toasts.Type.MESSAGE);
-    
-    try {
-        // Su desktop possiamo provare a invocare lo script tramite l'interfaccia nativa
-        // Se fallisce, il restart caricherà comunque i file se l'utente ha usato l'installer bat
-        relaunch();
-    } catch (e) {
-        showToast("Update failed. Please restart manually.", Toasts.Type.FAILURE);
-        relaunch();
-    }
 }
 
 export default definePlugin({
     name: "SpaceCordUpdater",
-    description: "Gestisce gli aggiornamenti automatici di SpaceCord.",
+    description: "Gestisce gli aggiornamenti automatici di SpaceCord con design professionale floating.",
     authors: [{ id: 1173520023239786538n, name: "SpaceCord Team" }],
-    required: true, // ← Rende il plugin ATTIVO DI DEFAULT per tutti
-    
-    patches: [
-        {
-            find: "window.GLOBAL_ENV.RELEASE_CHANNEL",
-            replacement: {
-                match: /return (\i)\.jsx\((\i)\.Fragment,{children:\[(\i),(\i)\]}\)/,
-                replace: "return $1.jsx($1.Fragment,{children:[$self.renderUpdateNotice(), $3, $4]})"
-            }
+    required: true,
+
+    patches: [],
+
+    async start() {
+        this.checkAndNotify();
+        this.interval = setInterval(() => this.checkAndNotify(), 1000 * 60 * 15);
+    },
+
+    stop() {
+        clearInterval(this.interval);
+        const el = document.getElementById("spacecord-update-notice-root");
+        if (el) el.remove();
+    },
+
+    async checkAndNotify() {
+        const updateVersion = await checkUpdate();
+        if (!updateVersion || document.getElementById("spacecord-update-notice-root")) return;
+
+        const container = document.createElement("div");
+        container.id = "spacecord-update-notice-root";
+        container.innerHTML = `
+            <div style="
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                width: 320px;
+                background: #0b0b0d;
+                border: 1px solid #313244;
+                border-radius: 16px;
+                color: white;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+                font-family: 'gg sans', 'Noto Sans', sans-serif;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+                z-index: 999999;
+                animation: spacecord-slide-in 0.5s ease-out;
+            ">
+                <style>
+                    @keyframes spacecord-slide-in {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                </style>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="
+                        background: linear-gradient(135deg, #cba6f7 0%, #89b4fa 100%);
+                        width: 40px;
+                        height: 40px;
+                        border-radius: 10px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 20px;
+                    ">🚀</div>
+                    <div>
+                        <div style="font-weight: bold; font-size: 16px; color: #f5e0dc;">New Update!</div>
+                        <div style="font-size: 13px; color: #a6adc8;">SpaceCord v${updateVersion}</div>
+                    </div>
+                </div>
+                <div style="font-size: 13px; color: #bac2de; line-height: 1.4;">
+                    Una nuova versione è disponibile. Aggiorna ora per ottenere le ultime patch e funzionalità.
+                </div>
+                <button id="spacecord-update-btn" style="
+                    background: rgba(255, 255, 255, 0.05);
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    color: white;
+                    padding: 10px;
+                    border-radius: 10px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    font-size: 12px;
+                ">Update & Restart</button>
+            </div>
+        `;
+
+        document.body.appendChild(container);
+
+        const btn = document.getElementById("spacecord-update-btn");
+        if (btn) {
+            btn.onclick = () => {
+                btn.innerText = "UPDATING...";
+                btn.style.opacity = "0.5";
+                relaunch();
+            };
+            btn.onmouseenter = () => {
+                btn.style.background = "rgba(255, 255, 255, 0.1)";
+                btn.style.borderColor = "rgba(255, 255, 255, 0.2)";
+                btn.style.transform = "translateY(-2px)";
+            };
+            btn.onmouseleave = () => {
+                btn.style.background = "rgba(255, 255, 255, 0.05)";
+                btn.style.borderColor = "rgba(255, 255, 255, 0.1)";
+                btn.style.transform = "translateY(0)";
+            };
         }
-    ],
-
-    renderUpdateNotice() {
-        const [updateVersion, setUpdateVersion] = React.useState<string | null>(null);
-
-        React.useEffect(() => {
-            // Controlla ogni 30 minuti
-            checkUpdate().then(v => setUpdateVersion(v));
-            const interval = setInterval(() => {
-                checkUpdate().then(v => setUpdateVersion(v));
-            }, 1000 * 60 * 30);
-            return () => clearInterval(interval);
-        }, []);
-
-        if (!updateVersion) return null;
-
-        return (
-            <Notice 
-                variant="positive"
-                style={{ 
-                    background: "linear-gradient(90deg, #1e1e2e 0%, #313244 100%)", 
-                    color: "#cdd6f4", 
-                    borderBottom: "1px solid #cba6f7",
-                    fontWeight: "500"
-                }}
-                action={
-                    <Button 
-                        size={Button.Sizes.SMALL} 
-                        color={Button.Colors.BRAND} 
-                        onClick={() => runAutoUpdate()}
-                        style={{ 
-                            borderRadius: "8px", 
-                            background: "#cba6f7", 
-                            color: "#1e1e2e", 
-                            fontWeight: "bold",
-                            boxShadow: "0 0 10px rgba(203, 166, 247, 0.4)"
-                        }}
-                    >
-                        UPDATE & RESTART
-                    </Button>
-                }
-            >
-                🚀 <b>SpaceCord v{updateVersion} is out!</b> Click the button to apply the latest improvements.
-            </Notice>
-        );
     }
 });

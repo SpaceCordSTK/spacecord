@@ -15,8 +15,6 @@ const settings = definePluginSettings({
 
 function toggleFakeDeafen() {
     settings.store.fakeDeafen = !settings.store.fakeDeafen;
-    
-    // Notifichiamo a Discord di aggiornare lo stato
     try {
         MediaEngineActions.toggleSelfMute();
         setTimeout(() => MediaEngineActions.toggleSelfMute(), 100);
@@ -31,31 +29,16 @@ export default definePlugin({
 
     patches: [
         {
-            // Patch 1: Forza lo stato inviato al server (Gateway)
-            find: "setSelfMute(",
+            // Usiamo 'setSelfMute:' che è un identificatore più stabile
+            find: "setSelfMute:",
             replacement: [
                 {
-                    match: /setSelfDeafen\((.+?)\)/g,
-                    replace: "setSelfDeafen($self.isFakeDeafen() ? true : $1)"
+                    match: /setSelfDeafen:function\((.+?)\){/g,
+                    replace: "setSelfDeafen:function($1){if($self.isFakeDeafen()){arguments[0]=true;} "
                 },
                 {
-                    match: /setSelfMute\((.+?)\)/g,
-                    replace: "setSelfMute($self.isFakeDeafen() ? true : $1)"
-                }
-            ]
-        },
-        {
-            // Patch 2: IMPEDISCE a Discord di mutare l'audio locale 
-            // quando il Fake Deafen è attivo. Questo risolve il problema che non senti più nulla.
-            find: ".setSelfMute(this.selfMute",
-            replacement: [
-                {
-                    match: /\.setSelfMute\((.+?)\)/g,
-                    replace: ".setSelfMute($self.isFakeDeafen() ? false : $1)"
-                },
-                {
-                    match: /\.setSelfDeafen\((.+?)\)/g,
-                    replace: ".setSelfDeafen($self.isFakeDeafen() ? false : $1)"
+                    match: /setSelfMute:function\((.+?)\){/g,
+                    replace: "setSelfMute:function($1){if($self.isFakeDeafen()){arguments[0]=true;} "
                 }
             ]
         }
