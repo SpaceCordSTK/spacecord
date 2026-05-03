@@ -22,7 +22,7 @@ import { classes } from "@utils/misc";
 import definePlugin, { OptionType } from "@utils/types";
 import { Message } from "@vencord/discord-types";
 import { findCssClassesLazy } from "@webpack";
-import { ChannelStore, FluxDispatcher, Menu, MessageStore, Parser, SelectedChannelStore, Timestamp, UserStore, useStateFromStores } from "@webpack/common";
+import { ChannelStore, FluxDispatcher, Menu, MessageStore, Parser, SelectedChannelStore, Timestamp, UserStore, useStateFromStores, Tooltip } from "@webpack/common";
 
 import overlayStyle from "./deleteStyleOverlay.css?managed";
 import textStyle from "./deleteStyleText.css?managed";
@@ -637,6 +637,35 @@ export default definePlugin({
         );
     },
 
+    renderDeletedBadge(message: Message) {
+        if (!(message as any).deleted) return null;
+
+        return (
+            <Tooltip text="Questo messaggio è stato eliminato" position="top">
+                {(props: any) => (
+                    <div 
+                        {...props}
+                        className="messagelogger-deleted-badge"
+                        style={{ 
+                            display: "inline-flex", 
+                            alignItems: "center", 
+                            justifyContent: "center",
+                            color: "var(--status-danger)",
+                            marginRight: "4px",
+                            opacity: 0.8,
+                            cursor: "help"
+                        }}
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-5-1.5h-2v-2h2v2zm0-4h-2v-2h2v2z" />
+                            <path fill="currentColor" d="M3.29 2.71a.996.996 0 0 0 0 1.41L19.88 20.71a.996.996 0 1 0 1.41-1.41L4.71 2.71a.996.996 0 0 0-1.42 0z" />
+                        </svg>
+                    </div>
+                )}
+            </Tooltip>
+        );
+    },
+
     // DELETED_MESSAGE_COUNT: getMessage("{count, plural, =0 {No deleted messages} one {{count} deleted message} other {{count} deleted messages}}")
     // TODO: Find a better way to generate intl messages
     DELETED_MESSAGE_COUNT: () => ({
@@ -860,5 +889,13 @@ export default definePlugin({
             ],
             predicate: () => settings.store.collapseDeleted,
         },
+        {
+            // Inject deleted badge into message actions
+            find: 'targetIsMessage:',
+            replacement: {
+                match: /children:\[/,
+                replace: "$&$self.renderDeletedBadge(arguments[0].message),"
+            }
+        }
     ],
 });
