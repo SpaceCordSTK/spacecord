@@ -118,7 +118,7 @@ const SpaceCordStaffBadge: ProfileBadge = {
     props: {
         style: {
             borderRadius: "50%",
-            transform: "scale(1.2)"
+            transform: "scale(1.1)"
         }
     },
 };
@@ -157,7 +157,7 @@ const SpaceCordEventBadge: ProfileBadge = {
     props: {
         style: {
             borderRadius: "50%",
-            transform: "scale(1.0)"
+            transform: "scale(1.1)"
         }
     },
 };
